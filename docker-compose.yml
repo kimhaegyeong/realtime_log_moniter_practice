@@ -110,6 +110,86 @@ services:
     networks:
       - log-network
 
+# Log Producer API Service (FastAPI)
+  log-producer-api:
+    build:
+      context: ./services/log-producer
+      dockerfile: Dockerfile
+    container_name: log-producer-api
+    depends_on:
+      - kafka
+      - mongodb
+    ports:
+      - "8000:8000"
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: logs
+      SERVICE_NAME: log-producer-api
+      LOG_LEVEL: INFO
+    networks:
+      - log-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+  # Auto Producer - API Service
+  producer-api-service:
+    build:
+      context: ./services/log-producer
+      dockerfile: Dockerfile
+    container_name: producer-api-service
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: logs
+      SERVICE_NAME: api-service
+      LOGS_PER_SECOND: 5
+    networks:
+      - log-network
+    restart: unless-stopped
+    command: ["python", "-m", "app.main_auto"]
+
+  # Auto Producer - Auth Service
+  producer-auth-service:
+    build:
+      context: ./services/log-producer
+      dockerfile: Dockerfile
+    container_name: producer-auth-service
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: logs
+      SERVICE_NAME: auth-service
+      LOGS_PER_SECOND: 3
+    networks:
+      - log-network
+    restart: unless-stopped
+    command: ["python", "-m", "app.main_auto"]
+
+  # Auto Producer - Payment Service
+  producer-payment-service:
+    build:
+      context: ./services/log-producer
+      dockerfile: Dockerfile
+    container_name: producer-payment-service
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: logs
+      SERVICE_NAME: payment-service
+      LOGS_PER_SECOND: 2
+    networks:
+      - log-network
+    restart: unless-stopped
+    command: ["python", "-m", "app.main_auto"]
+
 # 볼륨 정의 (데이터 영속성)
 volumes:
   zookeeper-data:
