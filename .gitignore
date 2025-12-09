@@ -72,3 +72,6 @@ dmypy.json
 # Local configurations
 .env.local
 .env.*.local
+
+#
+monitoring/grafana/plugins/

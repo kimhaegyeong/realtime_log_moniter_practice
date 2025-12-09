@@ -214,21 +214,25 @@ services:
 
   # Grafana - 대시보드
   grafana:
-    image: grafana/grafana:10.2.0
+    image: grafana/grafana:12.3.0
     container_name: grafana
     depends_on:
       - mongodb
     ports:
       - "3000:3000"
     environment:
+      - GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS=haohanyang-mongodb-datasource
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin123
-      - GF_INSTALL_PLUGINS=grafana-mongodb-datasource
+      # Enterprise MongoDB 플러그인 사용
+      #- GF_INSTALL_PLUGINS=grafana-mongodb-datasource
       - GF_AUTH_ANONYMOUS_ENABLED=false
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
       - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      # 플러그인 설치를 위한 WSL 경로 바인드
+      - ./monitoring/grafana/plugins:/var/lib/grafana/plugins
     networks:
       - log-network
     restart: unless-stopped
