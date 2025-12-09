@@ -1,0 +1,11 @@
+apiVersion: 1
+
+datasources:
+  - name: Log Aggregator API
+    type: grafana-json-datasource
+    access: proxy
+    url: http://log-aggregator:8001
+    isDefault: false
+    editable: true
+    jsonData:
+      httpMethod: GET

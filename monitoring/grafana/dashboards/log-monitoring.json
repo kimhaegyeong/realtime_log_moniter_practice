@@ -1,0 +1,247 @@
+{
+    "annotations": {
+        "list": []
+    },
+    "editable": true,
+    "fiscalYearStartMonth": 0,
+    "graphTooltip": 0,
+    "id": null,
+    "links": [],
+    "panels": [
+        {
+            "datasource": {
+                "type": "grafana-mongodb-datasource",
+                "uid": "mongodb"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "thresholds"
+                    },
+                    "mappings": [],
+                    "thresholds": {
+                        "mode": "absolute",
+                        "steps": [
+                            {
+                                "color": "green",
+                                "value": null
+                            }
+                        ]
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 0,
+                "y": 0
+            },
+            "id": 1,
+            "options": {
+                "colorMode": "value",
+                "graphMode": "area",
+                "justifyMode": "auto",
+                "orientation": "auto",
+                "reduceOptions": {
+                    "values": false,
+                    "calcs": [
+                        "lastNotNull"
+                    ],
+                    "fields": ""
+                },
+                "textMode": "auto"
+            },
+            "pluginVersion": "10.0.0",
+            "targets": [
+                {
+                    "collection": "logs",
+                    "aggregate": [
+                        {
+                            "$count": "total"
+                        }
+                    ]
+                }
+            ],
+            "title": "Total Logs",
+            "type": "stat"
+        },
+        {
+            "datasource": {
+                "type": "grafana-mongodb-datasource",
+                "uid": "mongodb"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 6,
+                "y": 0
+            },
+            "id": 2,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                },
+                "pieType": "pie"
+            },
+            "targets": [
+                {
+                    "collection": "logs",
+                    "aggregate": [
+                        {
+                            "$group": {
+                                "_id": "$level",
+                                "count": {
+                                    "$sum": 1
+                                }
+                            }
+                        }
+                    ]
+                }
+            ],
+            "title": "Log Level Distribution",
+            "type": "piechart"
+        },
+        {
+            "datasource": {
+                "type": "grafana-mongodb-datasource",
+                "uid": "mongodb"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "id": 3,
+            "options": {
+                "legend": {
+                    "displayMode": "list",
+                    "placement": "bottom"
+                }
+            },
+            "targets": [
+                {
+                    "collection": "logs",
+                    "aggregate": [
+                        {
+                            "$match": {
+                                "timestamp": {
+                                    "$gte": {
+                                        "$date": {
+                                            "$subtract": [
+                                                "$timestamp",
+                                                3600000
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": {
+                                    "$dateToString": {
+                                        "format": "%Y-%m-%dT%H:00:00Z",
+                                        "date": "$timestamp"
+                                    }
+                                },
+                                "count": {
+                                    "$sum": 1
+                                }
+                            }
+                        },
+                        {
+                            "$sort": {
+                                "_id": 1
+                            }
+                        }
+                    ]
+                }
+            ],
+            "title": "Logs Over Time (Hourly)",
+            "type": "timeseries"
+        },
+        {
+            "datasource": {
+                "type": "grafana-mongodb-datasource",
+                "uid": "mongodb"
+            },
+            "fieldConfig": {
+                "defaults": {
+                    "color": {
+                        "mode": "palette-classic"
+                    }
+                }
+            },
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 8
+            },
+            "id": 4,
+            "options": {
+                "legend": {
+                    "displayMode": "table",
+                    "placement": "right"
+                }
+            },
+            "targets": [
+                {
+                    "collection": "logs",
+                    "aggregate": [
+                        {
+                            "$group": {
+                                "_id": "$service",
+                                "count": {
+                                    "$sum": 1
+                                }
+                            }
+                        },
+                        {
+                            "$sort": {
+                                "count": -1
+                            }
+                        }
+                    ]
+                }
+            ],
+            "title": "Logs by Service",
+            "type": "barchart"
+        }
+    ],
+    "refresh": "5s",
+    "schemaVersion": 38,
+    "tags": [
+        "logs",
+        "monitoring"
+    ],
+    "templating": {
+        "list": []
+    },
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "timepicker": {},
+    "timezone": "",
+    "title": "Log Monitoring Dashboard",
+    "uid": "log-monitoring",
+    "version": 0,
+    "weekStart": ""
+}

@@ -212,6 +212,32 @@ services:
     restart: unless-stopped
     command: ["python", "-m", "app.main_auto"]
 
+  # Grafana - 대시보드
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana
+    depends_on:
+      - mongodb
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_INSTALL_PLUGINS=grafana-mongodb-datasource
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+    networks:
+      - log-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
 # 볼륨 정의 (데이터 영속성)
 volumes:
   zookeeper-data:
@@ -221,6 +247,8 @@ volumes:
   kafka-data:
     driver: local
   mongodb-data:
+    driver: local
+  grafana-data:
     driver: local
 
 # 네트워크 정의

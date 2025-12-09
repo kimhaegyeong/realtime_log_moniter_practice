@@ -1,0 +1,457 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": {
+        "type": "mongodb",
+        "uid": "mongodb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1000
+              },
+              {
+                "color": "red",
+                "value": 5000
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mongodb",
+            "uid": "mongodb"
+          },
+          "collection": "logs",
+          "aggregate": "[\n  { \"$count\": \"total\" }\n]",
+          "refId": "A"
+        }
+      ],
+      "title": "📊 Total Logs",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mongodb",
+        "uid": "mongodb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 5
+              },
+              {
+                "color": "red",
+                "value": 15
+              }
+            ]
+          },
+          "unit": "percent"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 4,
+        "y": 0
+      },
+      "id": 2,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mongodb",
+            "uid": "mongodb"
+          },
+          "collection": "logs",
+          "aggregate": "[\n  {\n    \"$group\": {\n      \"_id\": null,\n      \"total\": { \"$sum\": 1 },\n      \"errors\": {\n        \"$sum\": {\n          \"$cond\": [\n            { \"$in\": [\"$level\", [\"ERROR\", \"CRITICAL\"]] },\n            1,\n            0\n          ]\n        }\n      }\n    }\n  },\n  {\n    \"$project\": {\n      \"error_rate\": {\n        \"$multiply\": [\n          { \"$divide\": [\"$errors\", \"$total\"] },\n          100\n        ]\n      }\n    }\n  }\n]",
+          "refId": "A"
+        }
+      ],
+      "title": "⚠️ Error Rate",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mongodb",
+        "uid": "mongodb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "blue",
+                "value": null
+              }
+            ]
+          },
+          "unit": "short"
+        }
+      },
+      "gridPos": {
+        "h": 5,
+        "w": 4,
+        "x": 8,
+        "y": 0
+      },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "textMode": "auto"
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mongodb",
+            "uid": "mongodb"
+          },
+          "collection": "logs",
+          "aggregate": "[\n  {\n    \"$group\": {\n      \"_id\": \"$service\"\n    }\n  },\n  {\n    \"$count\": \"services\"\n  }\n]",
+          "refId": "A"
+        }
+      ],
+      "title": "🔧 Active Services",
+      "type": "stat"
+    },
+    {
+      "datasource": {
+        "type": "mongodb",
+        "uid": "mongodb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": ["last", "max"],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mongodb",
+            "uid": "mongodb"
+          },
+          "collection": "logs",
+          "aggregate": "[\n  {\n    \"$match\": {\n      \"timestamp\": {\n        \"$gte\": \"$$from\",\n        \"$lte\": \"$$to\"\n      }\n    }\n  },\n  {\n    \"$group\": {\n      \"_id\": {\n        \"time\": {\n          \"$dateTrunc\": {\n            \"date\": \"$timestamp\",\n            \"unit\": \"minute\",\n            \"binSize\": 5\n          }\n        },\n        \"service\": \"$service\"\n      },\n      \"count\": { \"$sum\": 1 }\n    }\n  },\n  {\n    \"$sort\": { \"_id.time\": 1 }\n  }\n]",
+          "refId": "A"
+        }
+      ],
+      "title": "📈 Logs per Service (5min intervals)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "mongodb",
+        "uid": "mongodb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "hideFrom": {
+              "tooltip": false,
+              "viz": false,
+              "legend": false
+            }
+          },
+          "mappings": []
+        }
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "id": 5,
+      "options": {
+        "displayLabels": ["percent"],
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": ["value", "percent"]
+        },
+        "pieType": "donut",
+        "reduceOptions": {
+          "values": false,
+          "calcs": ["lastNotNull"],
+          "fields": ""
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "mongodb",
+            "uid": "mongodb"
+          },
+          "collection": "logs",
+          "aggregate": "[\n  {\n    \"$group\": {\n      \"_id\": \"$level\",\n      \"count\": { \"$sum\": 1 }\n    }\n  },\n  {\n    \"$sort\": { \"count\": -1 }\n  }\n]",
+          "refId": "A"
+        }
+      ],
+      "title": "🏷️ Log Level Distribution",
+      "type": "piechart"
+    },
+    {
+      "datasource": {
+        "type": "mongodb",
+        "uid": "mongodb"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "error_rate"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 5
+                    },
+                    {
+                      "color": "red",
+                      "value": 15
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 13
+      },
+      "id": 6,
+      "options": {
+        "cellHeight": "sm",
+        "footer": {
+          "countRows": false,
+          "fields": "",
+          "reducer": ["sum"],
+          "show": false
+        },
+        "showHeader": true
+      },
+      "pluginVersion": "10.2.0",
+      "targets": [
+        {
+          "datasource": {
+            "type": "mongodb",
+            "uid": "mongodb"
+          },
+          "collection": "logs",
+          "aggregate": "[\n  {\n    \"$group\": {\n      \"_id\": \"$service\",\n      \"total\": { \"$sum\": 1 },\n      \"info\": {\n        \"$sum\": {\n          \"$cond\": [{ \"$eq\": [\"$level\", \"INFO\"] }, 1, 0]\n        }\n      },\n      \"warning\": {\n        \"$sum\": {\n          \"$cond\": [{ \"$eq\": [\"$level\", \"WARNING\"] }, 1, 0]\n        }\n      },\n      \"error\": {\n        \"$sum\": {\n          \"$cond\": [{ \"$eq\": [\"$level\", \"ERROR\"] }, 1, 0]\n        }\n      },\n      \"critical\": {\n        \"$sum\": {\n          \"$cond\": [{ \"$eq\": [\"$level\", \"CRITICAL\"] }, 1, 0]\n        }\n      }\n    }\n  },\n  {\n    \"$project\": {\n      \"service\": \"$_id\",\n      \"total\": 1,\n      \"info\": 1,\n      \"warning\": 1,\n      \"error\": 1,\n      \"critical\": 1,\n      \"error_rate\": {\n        \"$multiply\": [\n          {\n            \"$divide\": [\n              { \"$add\": [\"$error\", \"$critical\"] },\n              \"$total\"\n            ]\n          },\n          100\n        ]\n      }\n    }\n  },\n  {\n    \"$sort\": { \"total\": -1 }\n  }\n]",
+          "refId": "A"
+        }
+      ],
+      "title": "📊 Service Statistics",
+      "type": "table"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "tags": ["logs", "monitoring", "advanced"],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {},
+  "timezone": "",
+  "title": "Advanced Log Monitoring",
+  "uid": "advanced-log-monitoring",
+  "version": 0,
+  "weekStart": ""
+}
