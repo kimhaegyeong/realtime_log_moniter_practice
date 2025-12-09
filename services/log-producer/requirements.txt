@@ -1,0 +1,15 @@
+# Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+
+# Kafka (Python 3.12 호환)
+kafka-python-ng==2.2.2
+
+# Utilities
+python-json-logger==2.0.7
+python-dotenv==1.0.0
+
+# For development
+pytest==7.4.3
+httpx==0.25.2
