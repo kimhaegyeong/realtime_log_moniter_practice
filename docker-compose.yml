@@ -110,7 +110,7 @@ services:
     networks:
       - log-network
 
-# Log Producer API Service (FastAPI)
+  # Log Producer API Service (FastAPI)
   log-producer-api:
     build:
       context: ./services/log-producer
@@ -135,6 +135,28 @@ services:
       timeout: 10s
       retries: 3
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+   # Log Aggregator Service
+  log-aggregator:
+    build:
+      context: ./services/log-aggregator
+      dockerfile: Dockerfile
+    container_name: log-aggregator
+    depends_on:
+      - mongodb
+    ports:
+      - "8001:8001"
+    environment:
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+      MONGODB_DATABASE: ${MONGO_DATABASE}
+    networks:
+      - log-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3  
 
   # Auto Producer - API Service
   producer-api-service:
