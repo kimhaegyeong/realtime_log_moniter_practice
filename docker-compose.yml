@@ -158,6 +158,67 @@ services:
       timeout: 10s
       retries: 3  
 
+  # Log Consumer Service (3 replicas for parallel processing)
+  log-consumer-1:
+    build:
+      context: ./services/log-consumer
+      dockerfile: Dockerfile
+    container_name: log-consumer-1
+    depends_on:
+      - kafka
+      - mongodb
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: logs
+      KAFKA_GROUP_ID: log-consumer-group
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+      MONGODB_DATABASE: ${MONGO_DATABASE}
+      BATCH_SIZE: 500
+    networks:
+      - log-network
+    command: ["python", "-m", "app.main"]
+    restart: unless-stopped
+
+  log-consumer-2:
+    build:
+      context: ./services/log-consumer
+      dockerfile: Dockerfile
+    container_name: log-consumer-2
+    depends_on:
+      - kafka
+      - mongodb
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: logs
+      KAFKA_GROUP_ID: log-consumer-group
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+      MONGODB_DATABASE: ${MONGO_DATABASE}
+      BATCH_SIZE: 500
+    networks:
+      - log-network
+    command: ["python", "-m", "app.main"]
+    restart: unless-stopped
+
+  log-consumer-3:
+    build:
+      context: ./services/log-consumer
+      dockerfile: Dockerfile
+    container_name: log-consumer-3
+    depends_on:
+      - kafka
+      - mongodb
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: kafka:29092
+      KAFKA_TOPIC: logs
+      KAFKA_GROUP_ID: log-consumer-group
+      MONGODB_URI: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+      MONGODB_DATABASE: ${MONGO_DATABASE}
+      BATCH_SIZE: 500
+    networks:
+      - log-network
+    command: ["python", "-m", "app.main"]
+    restart: unless-stopped
+
   # Auto Producer - API Service
   producer-api-service:
     build:
@@ -170,7 +231,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_TOPIC: logs
       SERVICE_NAME: api-service
-      LOGS_PER_SECOND: 5
+      LOGS_PER_SECOND: 50
     networks:
       - log-network
     restart: unless-stopped
@@ -188,7 +249,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_TOPIC: logs
       SERVICE_NAME: auth-service
-      LOGS_PER_SECOND: 3
+      LOGS_PER_SECOND: 30
     networks:
       - log-network
     restart: unless-stopped
@@ -206,7 +267,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: kafka:29092
       KAFKA_TOPIC: logs
       SERVICE_NAME: payment-service
-      LOGS_PER_SECOND: 2
+      LOGS_PER_SECOND: 20
     networks:
       - log-network
     restart: unless-stopped
