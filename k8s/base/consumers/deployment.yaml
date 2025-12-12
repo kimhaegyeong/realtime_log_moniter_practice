@@ -1,0 +1,68 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-consumer
+  namespace: log-monitoring
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: log-consumer
+  template:
+    metadata:
+      labels:
+        app: log-consumer
+    spec:
+      containers:
+      - name: consumer
+        image: log-consumer:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: KAFKA_TOPIC
+        - name: KAFKA_GROUP_ID
+          value: "log-consumer-group"
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: log-monitoring-secrets
+              key: MONGODB_URI
+        - name: MONGODB_DATABASE
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: MONGODB_DATABASE
+        - name: BATCH_SIZE
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: BATCH_SIZE
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "200m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: log-monitoring-secrets
+  namespace: log-monitoring
+type: Opaque
+stringData:
+  MONGODB_URI: "mongodb://admin:admin123@mongodb:27017/"

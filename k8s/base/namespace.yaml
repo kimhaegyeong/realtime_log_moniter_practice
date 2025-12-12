@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: log-monitoring
+  labels:
+    name: log-monitoring
+    environment: production

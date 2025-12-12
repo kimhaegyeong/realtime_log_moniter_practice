@@ -1,0 +1,195 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: log-producer-api
+  namespace: log-monitoring
+  labels:
+    app: log-producer-api
+spec:
+  type: ClusterIP
+  ports:
+  - port: 8000
+    targetPort: 8000
+    name: http
+  selector:
+    app: log-producer-api
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: log-producer-api
+  namespace: log-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: log-producer-api
+  template:
+    metadata:
+      labels:
+        app: log-producer-api
+    spec:
+      containers:
+      - name: producer
+        image: log-producer:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8000
+          name: http
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: KAFKA_TOPIC
+        command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-api-service
+  namespace: log-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer-api-service
+  template:
+    metadata:
+      labels:
+        app: producer-api-service
+    spec:
+      containers:
+      - name: producer
+        image: log-producer:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: KAFKA_TOPIC
+        - name: SERVICE_NAME
+          value: "api-service"
+        - name: LOGS_PER_SECOND
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: LOGS_PER_SECOND_API
+        command: ["python", "-m", "app.main_auto"]
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-auth-service
+  namespace: log-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer-auth-service
+  template:
+    metadata:
+      labels:
+        app: producer-auth-service
+    spec:
+      containers:
+      - name: producer
+        image: log-producer:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: KAFKA_TOPIC
+        - name: SERVICE_NAME
+          value: "auth-service"
+        - name: LOGS_PER_SECOND
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: LOGS_PER_SECOND_AUTH
+        command: ["python", "-m", "app.main_auto"]
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: producer-payment-service
+  namespace: log-monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: producer-payment-service
+  template:
+    metadata:
+      labels:
+        app: producer-payment-service
+    spec:
+      containers:
+      - name: producer
+        image: log-producer:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: KAFKA_BOOTSTRAP_SERVERS
+          value: "kafka:9092"
+        - name: KAFKA_TOPIC
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: KAFKA_TOPIC
+        - name: SERVICE_NAME
+          value: "payment-service"
+        - name: LOGS_PER_SECOND
+          valueFrom:
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: LOGS_PER_SECOND_PAYMENT
+        command: ["python", "-m", "app.main_auto"]
+        resources:
+          requests:
+            memory: "64Mi"
+            cpu: "50m"
+          limits:
+            memory: "128Mi"
+            cpu: "200m"
