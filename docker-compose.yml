@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # Zookeeper - Kafka의 메타데이터 관리
   zookeeper:
@@ -48,7 +46,7 @@ services:
     networks:
       - log-network
     healthcheck:
-      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      test: [ "CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -87,7 +85,7 @@ services:
     networks:
       - log-network
     healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      test: [ "CMD", "mongosh", "--eval", "db.adminCommand('ping')" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -109,6 +107,17 @@ services:
       ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
     networks:
       - log-network
+    # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
 
   # Log Producer API Service (FastAPI)
   log-producer-api:
@@ -130,13 +139,13 @@ services:
       - log-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
-    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: [ "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000" ]
 
-   # Log Aggregator Service
+  # Log Aggregator Service
   log-aggregator:
     build:
       context: ./services/log-aggregator
@@ -153,10 +162,10 @@ services:
       - log-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8001/health" ]
       interval: 30s
       timeout: 10s
-      retries: 3  
+      retries: 3
 
   # Log Consumer Service (3 replicas for parallel processing)
   log-consumer-1:
@@ -176,7 +185,7 @@ services:
       BATCH_SIZE: 500
     networks:
       - log-network
-    command: ["python", "-m", "app.main"]
+    command: [ "python", "-m", "app.main" ]
     restart: unless-stopped
 
   log-consumer-2:
@@ -196,7 +205,7 @@ services:
       BATCH_SIZE: 500
     networks:
       - log-network
-    command: ["python", "-m", "app.main"]
+    command: [ "python", "-m", "app.main" ]
     restart: unless-stopped
 
   log-consumer-3:
@@ -216,7 +225,7 @@ services:
       BATCH_SIZE: 500
     networks:
       - log-network
-    command: ["python", "-m", "app.main"]
+    command: [ "python", "-m", "app.main" ]
     restart: unless-stopped
 
   # Auto Producer - API Service
@@ -235,7 +244,7 @@ services:
     networks:
       - log-network
     restart: unless-stopped
-    command: ["python", "-m", "app.main_auto"]
+    command: [ "python", "-m", "app.main_auto" ]
 
   # Auto Producer - Auth Service
   producer-auth-service:
@@ -253,7 +262,7 @@ services:
     networks:
       - log-network
     restart: unless-stopped
-    command: ["python", "-m", "app.main_auto"]
+    command: [ "python", "-m", "app.main_auto" ]
 
   # Auto Producer - Payment Service
   producer-payment-service:
@@ -271,7 +280,7 @@ services:
     networks:
       - log-network
     restart: unless-stopped
-    command: ["python", "-m", "app.main_auto"]
+    command: [ "python", "-m", "app.main_auto" ]
 
   # Grafana - 대시보드
   grafana:
@@ -298,7 +307,7 @@ services:
       - log-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1"]
+      test: [ "CMD-SHELL", "curl -f http://localhost:3000/api/health || exit 1" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -315,9 +324,11 @@ volumes:
     driver: local
   grafana-data:
     driver: local
+  prometheus_data:
+    driver: local
 
 # 네트워크 정의
 networks:
   log-network:
-    name: log-monitoring-network  # 명시적 이름 지정
+    name: log-monitoring-network # 명시적 이름 지정
     driver: bridge
