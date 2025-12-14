@@ -14,3 +14,4 @@ schedule==1.2.0
 # For development
 pytest==7.4.3
 httpx==0.25.2
+prometheus-client==0.17.0

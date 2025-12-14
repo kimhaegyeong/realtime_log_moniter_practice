@@ -3,7 +3,7 @@
 """
 import logging
 from datetime import datetime
-from typing import Optional, List
+from typing import Optional, List, Dict
 from app.database.mongodb import MongoDBClient
 from app.models.stats import (
     ServiceStats,
@@ -155,3 +155,53 @@ class LogAggregatorService:
             
         except Exception as e:
             logger.error(f"Error generating hourly aggregation: {e}")
+
+    def get_recent_stats(self, start_time: datetime) -> Dict[str, Dict[str, int]]:
+        """
+        최근 특정 시점(start_time) 이후의 로그를 기준으로
+        서비스별 / 레벨별 로그 개수를 집계한다.
+
+        반환 형태:
+        {
+            "api-service": {
+                "INFO": 120,
+                "ERROR": 3
+            },
+            "auth-service": {
+                "INFO": 80,
+                "CRITICAL": 1
+            }
+        }
+        """
+        pipeline = [
+            {
+                "$match": {
+                    "timestamp": {"$gte": start_time}
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "service": "$service",
+                        "level": "$level"
+                    },
+                    "count": {"$sum": 1}
+                }
+            }
+        ]
+
+        cursor = self.logs.aggregate(pipeline, allowDiskUse=True)
+
+        result: Dict[str, Dict[str, int]] = {}
+
+        for doc in cursor:
+            service = doc["_id"].get("service", "unknown")
+            level = doc["_id"].get("level", "UNKNOWN")
+            count = doc["count"]
+
+            if service not in result:
+                result[service] = {}
+
+            result[service][level] = count
+
+        return result
