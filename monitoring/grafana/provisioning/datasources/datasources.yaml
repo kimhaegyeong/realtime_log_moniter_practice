@@ -1,0 +1,23 @@
+apiVersion: 1
+
+datasources:
+  - name: Prometheus
+    type: prometheus
+    link: true
+    uid: df759vwi7qygwe
+    url: http://prometheus:9090
+    access: proxy
+    isDefault: true
+    jsonData:
+      graphiteVersion: "1.1"
+      tlsAuth: false
+      tlsAuthWithCACert: false
+  - name: MongoDB
+    type: haohanyang-mongodb-datasource
+    uid: mongodb
+    url: mongodb://mongodb:27017
+    jsonData:
+      database: "logs"
+    secureJsonData:
+      username: "${MONGO_ROOT_USERNAME}"
+      password: "${MONGO_ROOT_PASSWORD}"

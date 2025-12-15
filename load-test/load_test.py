@@ -12,7 +12,7 @@ def send_logs(duration_seconds, logs_per_second):
 
         # 1초에 logs_per_second개 전송
         for _ in range(logs_per_second):
-            requests.post('http://localhost:8000/api/logs/generate',
+            requests.post('http://localhost:8000/api/logs/batch',
                         json={'count': 1})
 
         # 1초 맞추기
