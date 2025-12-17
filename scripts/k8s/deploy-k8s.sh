@@ -29,58 +29,20 @@ if command -v minikube &> /dev/null; then
     minikube image load log-aggregator:latest
 fi
 
-# 3. Namespace 생성
-echo -e "\n${YELLOW}3. Creating namespace...${NC}"
-kubectl apply -f k8s/base/namespace.yaml
+echo -e "\n${YELLOW}3. Applying Namespace & Configs (via Kustomize)...${NC}"
 
-# 4. ConfigMap과 Secret 적용
-echo -e "\n${YELLOW}4. Applying ConfigMap and Secrets...${NC}"
-kubectl apply -f k8s/base/configmap.yaml
-kubectl apply -f k8s/base/secret.yaml
+# Kustomize로 Namespace, ConfigMap, Secret 등 기본 리소스 우선 적용
+kubectl apply -k k8s/base -l "kind in (Namespace, ConfigMap, Secret, PersistentVolumeClaim)"
+echo -e "\n${YELLOW}4. Deploying StatefulSets (DB/Kafka)...${NC}"
 
-# 5. MongoDB 배포
-echo -e "\n${YELLOW}5. Deploying MongoDB...${NC}"
-kubectl apply -f k8s/base/mongodb/statefulset.yaml
+# DB와 Kafka 먼저 배포 (Kustomize 전체 적용하되, StatefulSet이 먼저 뜨도록 유도)
+kubectl apply -k k8s/base
+echo "Waiting for MongoDB & Kafka to be ready..."
 
-echo "Waiting for MongoDB (30 seconds)..."
-sleep 60
+# sleep 대신 실제로 준비될 때까지 기다림 (타임아웃 설정)
+kubectl wait --for=condition=ready pod -l app=mongodb -n log-monitoring --timeout=120s
+kubectl wait --for=condition=ready pod -l app=kafka -n log-monitoring --timeout=120s
+echo -e "\n${YELLOW}5. Verifying Deployments...${NC}"
 
-# 6. Kafka 배포
-echo -e "\n${YELLOW}6. Deploying Kafka...${NC}"
-kubectl apply -f k8s/base/kafka/statefulset.yaml
-
-echo "Waiting for Kafka (40 seconds)..."
-sleep 40
-
-# 7. Consumers 배포
-echo -e "\n${YELLOW}7. Deploying Consumers...${NC}"
-kubectl apply -f k8s/base/consumers/deployment.yaml
-
-sleep 20
-
-# 8. Producers 배포
-echo -e "\n${YELLOW}8. Deploying Producers...${NC}"
-kubectl apply -f k8s/base/producers/deployment.yaml
-
-# 9. Aggregator 배포
-echo -e "\n${YELLOW}9. Deploying Aggregator...${NC}"
-kubectl apply -f k8s/base/aggregator/deployment.yaml
-
-# 10. Grafana 배포
-echo -e "\n${YELLOW}10. Deploying Grafana...${NC}"
-kubectl apply -f k8s/base/grafana/deployment.yaml
-
-# 11. HPA 적용
-echo -e "\n${YELLOW}11. Applying HPA...${NC}"
-kubectl apply -f k8s/base/hpa.yaml
-
-# 12. 상태 확인
-echo -e "\n${YELLOW}12. Checking deployment status...${NC}"
-kubectl get pods -n log-monitoring
-
-echo -e "\n${GREEN}✅ Deployment completed${NC}"
-echo ""
-echo "Check status with:"
-echo "  kubectl get pods -n log-monitoring"
-echo "  kubectl get svc -n log-monitoring"
-echo "  kubectl get hpa -n log-monitoring"
+# 나머지 애플리케이션들은 이미 'kubectl apply -k'로 생성되었으므로
+# DB가 준비되면 알아서 Running 상태로 전환된다.

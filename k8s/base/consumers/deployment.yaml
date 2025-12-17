@@ -29,8 +29,8 @@ spec:
           value: "log-consumer-group"
         - name: MONGODB_URI
           valueFrom:
-            secretKeyRef:
-              name: log-monitoring-secrets
+            configMapKeyRef:
+              name: log-monitoring-config
               key: MONGODB_URI
         - name: MONGODB_DATABASE
           valueFrom:
@@ -57,12 +57,3 @@ spec:
             - "import sys; sys.exit(0)"
           initialDelaySeconds: 30
           periodSeconds: 30
----
-apiVersion: v1
-kind: Secret
-metadata:
-  name: log-monitoring-secrets
-  namespace: log-monitoring
-type: Opaque
-stringData:
-  MONGODB_URI: "mongodb://admin:admin123@mongodb:27017/"

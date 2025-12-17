@@ -39,9 +39,9 @@ spec:
         env:
         - name: MONGODB_URI
           valueFrom:
-            secretKeyRef:
-              name: log-monitoring-secrets
-              key: MONGODB_URI
+            configMapKeyRef:
+              name: log-monitoring-config
+              key: LOGS_PER_SECOND_PAYMENT
         - name: MONGODB_DATABASE
           valueFrom:
             configMapKeyRef:

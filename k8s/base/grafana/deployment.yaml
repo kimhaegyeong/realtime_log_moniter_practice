@@ -41,6 +41,29 @@ spec:
       labels:
         app: grafana
     spec:
+      ####################################################################
+      # 1. initContainer — 플러그인 ZIP 다운로드 및 압축 해제
+      ####################################################################
+      initContainers:
+      - name: install-mongodb-plugin
+        image: alpine:3.19
+        command:
+          - sh
+          - -c
+          - |
+            apk add --no-cache wget unzip
+            mkdir -p /plugins
+            cd /plugins
+            wget https://github.com/haohanyang/mongodb-datasource/releases/download/v0.4.1/haohanyang-mongodb-datasource-0.4.1.zip
+            unzip haohanyang-mongodb-datasource-0.4.1.zip
+            chmod +x haohanyang-mongodb-datasource/gpx_mongodb_datasource_*
+        volumeMounts:
+        - name: grafana-plugins
+          mountPath: /plugins
+
+      ####################################################################
+      # 2. Main Grafana Container
+      ####################################################################
       containers:
       - name: grafana
         image: grafana/grafana:10.2.0
@@ -58,15 +81,31 @@ spec:
             secretKeyRef:
               name: log-monitoring-secrets
               key: GRAFANA_ADMIN_PASSWORD
+        - name: MONGO_ROOT_USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: log-monitoring-secrets
+              key: MONGO_ROOT_USERNAME
+        - name: MONGO_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: log-monitoring-secrets
+              key: MONGO_ROOT_PASSWORD
         - name: GF_INSTALL_PLUGINS
           value: "grafana-mongodb-datasource"
         - name: GF_AUTH_ANONYMOUS_ENABLED
           value: "false"
+        - name: "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS"
+          value: "haohanyang-mongodb-datasource"
         volumeMounts:
         - name: grafana-storage
           mountPath: /var/lib/grafana
         - name: grafana-provisioning
           mountPath: /etc/grafana/provisioning
+        - name: grafana-dashboards
+          mountPath: /etc/grafana/provisioning/dashboards
+        - name: grafana-plugins
+          mountPath: /var/lib/grafana/plugins
         resources:
           requests:
             memory: "256Mi"
@@ -93,3 +132,8 @@ spec:
       - name: grafana-provisioning
         configMap:
           name: grafana-provisioning
+      - name: grafana-dashboards
+        configMap:
+          name: grafana-dashboards
+      - name: grafana-plugins
+        emptyDir: {}

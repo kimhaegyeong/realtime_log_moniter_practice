@@ -13,8 +13,16 @@ resources:
 - consumers/deployment.yaml
 - aggregator/deployment.yaml
 - grafana/deployment.yaml
+- prometheus/deployment.yaml
 - hpa.yaml
 
-commonLabels:
-  project: log-monitoring
-  managed-by: kustomize
+labels:
+- pairs:
+    project: log-monitoring
+    managed-by: kustomize
+
+configMapGenerator:
+- name: grafana-dashboards
+  files:
+  - grafana/log-monitoring-dashboard.json
+
