@@ -33,6 +33,32 @@ echo -e "\n${YELLOW}3. Applying Namespace & Configs (via Kustomize)...${NC}"
 
 # Kustomize로 Namespace, ConfigMap, Secret 등 기본 리소스 우선 적용
 kubectl apply -k k8s/base -l "kind in (Namespace, ConfigMap, Secret, PersistentVolumeClaim)"
+
+
+# Helm을 사용하여 kube-state-metrics 배포
+echo -e "\n${YELLOW}3-1. Deploying kube-state-metrics via Helm...${NC}"
+
+if command -v helm &> /dev/null; then
+    # Helm Repo 추가 (없을 경우에만)
+    if ! helm repo list | grep -q "prometheus-community"; then
+        helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+    fi
+    
+    helm repo update > /dev/null
+
+    # kube-prometheus-stack 설치 (Prometheus Operator, KSM, Node-Exporter 포함)
+    # 기존 Grafana는 유지하고 Prometheus만 교체
+    helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack \
+        --namespace log-monitoring \
+        --create-namespace \
+        --set grafana.enabled=false \
+        --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
+        --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false
+else
+    echo -e "${RED}Warning: Helm is not installed. Skipping Prometheus Stack deployment.${NC}"
+    echo "Recommended: Install Helm for better package management (https://helm.sh)"
+fi
+
 echo -e "\n${YELLOW}4. Deploying StatefulSets (DB/Kafka)...${NC}"
 
 # DB와 Kafka 먼저 배포 (Kustomize 전체 적용하되, StatefulSet이 먼저 뜨도록 유도)

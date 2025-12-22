@@ -10,6 +10,7 @@ minikube addons enable metrics-server
 minikube addons enable ingress
 minikube addons enable ingress-dns
 
+
 # Ingress 활성화 (선택사항)
 minikube addons enable ingress
 

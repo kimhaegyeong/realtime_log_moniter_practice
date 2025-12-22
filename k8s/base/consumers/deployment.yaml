@@ -12,11 +12,19 @@ spec:
     metadata:
       labels:
         app: log-consumer
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
     spec:
+      enableServiceLinks: false
       containers:
       - name: consumer
         image: log-consumer:latest
         imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+          name: metrics
         env:
         - name: KAFKA_BOOTSTRAP_SERVERS
           value: "kafka:9092"

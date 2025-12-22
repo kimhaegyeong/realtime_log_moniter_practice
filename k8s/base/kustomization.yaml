@@ -13,7 +13,6 @@ resources:
 - consumers/deployment.yaml
 - aggregator/deployment.yaml
 - grafana/deployment.yaml
-- prometheus/deployment.yaml
 - hpa.yaml
 
 labels:
@@ -25,4 +24,6 @@ configMapGenerator:
 - name: grafana-dashboards
   files:
   - grafana/log-monitoring-dashboard.json
+  - grafana/Hpa_metric-1766317574891.json
+  - grafana/dashboard-provider.yaml
 

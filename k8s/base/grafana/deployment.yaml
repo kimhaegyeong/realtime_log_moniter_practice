@@ -101,7 +101,7 @@ spec:
         - name: grafana-storage
           mountPath: /var/lib/grafana
         - name: grafana-provisioning
-          mountPath: /etc/grafana/provisioning
+          mountPath: /etc/grafana/provisioning/datasources
         - name: grafana-dashboards
           mountPath: /etc/grafana/provisioning/dashboards
         - name: grafana-plugins

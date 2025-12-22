@@ -28,6 +28,10 @@ spec:
     metadata:
       labels:
         app: log-aggregator
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8001"
+        prometheus.io/path: "/metrics"
     spec:
       containers:
       - name: aggregator
@@ -41,7 +45,7 @@ spec:
           valueFrom:
             configMapKeyRef:
               name: log-monitoring-config
-              key: LOGS_PER_SECOND_PAYMENT
+              key: MONGODB_URI
         - name: MONGODB_DATABASE
           valueFrom:
             configMapKeyRef:
