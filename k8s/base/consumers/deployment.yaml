@@ -5,6 +5,11 @@ metadata:
   namespace: log-monitoring
 spec:
   replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: log-consumer
@@ -65,3 +70,11 @@ spec:
             - "import sys; sys.exit(0)"
           initialDelaySeconds: 30
           periodSeconds: 30
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 10
+          periodSeconds: 5

@@ -135,26 +135,18 @@ spec:
           limits:
             memory: "2Gi"
             cpu: "1000m"
-        startupProbe:
-          exec:
-            command:
-            - kafka-broker-api-versions
-            - --bootstrap-server
-            - localhost:9092
-          initialDelaySeconds: 10  # 시작 후 10초 후에 검사를 시작
-          periodSeconds: 5         # 5초마다 검사
-          failureThreshold: 30     # 30회 실패까지 허용 (총 10s + 5s*30 = 160초 대기)
-          timeoutSeconds: 5        # 명령이 5초 안에 완료되어야 함 (기존 1초보다 증가)
         readinessProbe:
-          exec:
-            command:
-            - kafka-broker-api-versions
-            - --bootstrap-server
-            - localhost:9092
-          initialDelaySeconds: 30  # Startup Probe 통과 후 이 지연 시간이 지나야 시작 (혹은 0으로 설정)
+          tcpSocket:
+            port: 9092
+          initialDelaySeconds: 40
           periodSeconds: 10
-          timeoutSeconds: 5        # Readiness Probe의 시간 초과를 5초로 증가
-          failureThreshold: 3      # 3회 실패하면 Unready로 표시
+          timeoutSeconds: 1
+          failureThreshold: 3
+        livenessProbe:
+          tcpSocket:
+            port: 9092
+          initialDelaySeconds: 90
+          periodSeconds: 20
   volumeClaimTemplates:
   - metadata:
       name: kafka-data

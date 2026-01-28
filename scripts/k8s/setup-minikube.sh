@@ -3,7 +3,7 @@
 echo "=== Setting up Minikube ==="
 
 # Minikube 시작
-minikube start --memory=8192 --cpus=4 --driver=docker
+minikube start --memory=12288 --cpus=6 --driver=docker
 
 # Metrics Server 설치 (HPA 필수)
 minikube addons enable metrics-server

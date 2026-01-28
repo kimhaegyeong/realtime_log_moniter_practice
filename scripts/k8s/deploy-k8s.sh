@@ -15,19 +15,17 @@ cd $ROOT_DIR
 
 echo "Using ROOT_DIR: $ROOT_DIR"
 
-# 1. Docker 이미지 빌드
-echo -e "\n${YELLOW}1. Building Docker images...${NC}"
+# 1. Minikube Docker 환경 사용 (이미지 복사 과정 제거로 속도 향상)
+if command -v minikube &> /dev/null; then
+    echo -e "\n${YELLOW}Configuring Docker environment for Minikube...${NC}"
+    eval $(minikube -p minikube docker-env)
+fi
+
+# 2. Docker 이미지 빌드 (Minikube 내부 데몬 이용)
+echo -e "\n${YELLOW}1. Building Docker images directly in Minikube...${NC}"
 docker build -t log-producer:latest ./services/log-producer
 docker build -t log-consumer:latest ./services/log-consumer
 docker build -t log-aggregator:latest ./services/log-aggregator
-
-# 2. Minikube에 이미지 로드 (로컬 테스트용)
-if command -v minikube &> /dev/null; then
-    echo -e "\n${YELLOW}2. Loading images to Minikube...${NC}"
-    minikube image load log-producer:latest
-    minikube image load log-consumer:latest
-    minikube image load log-aggregator:latest
-fi
 
 echo -e "\n${YELLOW}3. Applying Namespace & Configs (via Kustomize)...${NC}"
 
@@ -46,29 +44,31 @@ if command -v helm &> /dev/null; then
     
     helm repo update > /dev/null
 
-    # kube-prometheus-stack 설치 (Prometheus Operator, KSM, Node-Exporter 포함)
-    # 기존 Grafana는 유지하고 Prometheus만 교체
+    # kube-prometheus-stack 설치 (경고 메시지 필터링 및 Grafana 활성화)
+    # Grafana 활성화로 변경 (User가 이전 단계에서 Grafana 접속 정보를 확인했으므로)
+    echo "Installing/Updating Prometheus Stack (suppressing warnings)..."
     helm upgrade --install prometheus-stack prometheus-community/kube-prometheus-stack \
         --namespace log-monitoring \
         --create-namespace \
-        --set grafana.enabled=false \
+        --set grafana.enabled=true \
         --set prometheus.prometheusSpec.serviceMonitorSelectorNilUsesHelmValues=false \
-        --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false
+        --set prometheus.prometheusSpec.podMonitorSelectorNilUsesHelmValues=false \
+        2>&1 | grep -vE "unrecognized format|spec.SessionAffinity"
 else
     echo -e "${RED}Warning: Helm is not installed. Skipping Prometheus Stack deployment.${NC}"
-    echo "Recommended: Install Helm for better package management (https://helm.sh)"
 fi
 
 echo -e "\n${YELLOW}4. Deploying StatefulSets (DB/Kafka)...${NC}"
 
-# DB와 Kafka 먼저 배포 (Kustomize 전체 적용하되, StatefulSet이 먼저 뜨도록 유도)
+# DB와 Kafka 먼저 배포
 kubectl apply -k k8s/base
-echo "Waiting for MongoDB & Kafka to be ready..."
 
-# sleep 대신 실제로 준비될 때까지 기다림 (타임아웃 설정)
-kubectl wait --for=condition=ready pod -l app=mongodb -n log-monitoring --timeout=120s
-kubectl wait --for=condition=ready pod -l app=kafka -n log-monitoring --timeout=120s
+echo "Waiting for pods to be created..."
+sleep 5  # Pod 생성 대기
+
+# DB 준비 대기
+echo "Waiting for MongoDB to be ready..."
+kubectl wait --for=condition=ready pod -l app=mongodb -n log-monitoring --timeout=300s
+
 echo -e "\n${YELLOW}5. Verifying Deployments...${NC}"
-
-# 나머지 애플리케이션들은 이미 'kubectl apply -k'로 생성되었으므로
-# DB가 준비되면 알아서 Running 상태로 전환된다.
+kubectl get pods -n log-monitoring

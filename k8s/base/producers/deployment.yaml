@@ -20,7 +20,12 @@ metadata:
   name: log-producer-api
   namespace: log-monitoring
 spec:
-  replicas: 1
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: log-producer-api
@@ -77,6 +82,11 @@ metadata:
   namespace: log-monitoring
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: producer-api-service
@@ -112,6 +122,22 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "200m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 10
+          periodSeconds: 5
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -120,6 +146,11 @@ metadata:
   namespace: log-monitoring
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: producer-auth-service
@@ -155,6 +186,22 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "200m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 10
+          periodSeconds: 5
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -163,6 +210,11 @@ metadata:
   namespace: log-monitoring
 spec:
   replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app: producer-payment-service
@@ -198,3 +250,19 @@ spec:
           limits:
             memory: "128Mi"
             cpu: "200m"
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 10
+          periodSeconds: 5

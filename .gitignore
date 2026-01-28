@@ -76,3 +76,4 @@ dmypy.json
 #
 monitoring/grafana/plugins/
 scripts/k8s/test/load-test-results/
+docs/archive
